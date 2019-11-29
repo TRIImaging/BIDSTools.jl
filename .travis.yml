@@ -12,6 +12,11 @@ os:
 arch:
   - x64
   - x86
+branches: # Save CI time by restricting CI to PRs and releases
+  only:
+    - master
+    - /^v[0-9]+\.[0-9]+\.[0-9]+$/ # version tags for Documenter
+    - /^release-.*$/ # Release branches, if any.
 jobs:
   fast_finish: true
   allow_failures:
