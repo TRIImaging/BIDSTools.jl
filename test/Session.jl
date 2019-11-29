@@ -1,7 +1,10 @@
 @testset "parse single session" begin
     ses_path = joinpath(
         @__DIR__,
-        "data/bids_root/sub-subtest/ses-1/"
+        "data",
+        "bids_root",
+        "sub-subtest",
+        "ses-1"
     )
 
     my_ses = Session(ses_path)

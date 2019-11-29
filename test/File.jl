@@ -1,7 +1,12 @@
 @testset "parse single file" begin
     file_path = joinpath(
         @__DIR__,
-        "data/bids_root/sub-subtest/ses-1/test/sub-test_ses-1_run-001_modlbl.nii.gz"
+        "data",
+        "bids_root",
+        "sub-subtest",
+        "ses-1",
+        "test",
+        "sub-test_ses-1_run-001_modlbl.nii.gz"
     )
 
     my_file = File(file_path)
@@ -22,7 +27,12 @@
 
     metadata_path = joinpath(
         @__DIR__,
-        "data/bids_root/sub-subtest/ses-1/test/sub-test_ses-1_run-001_modlbl.json"
+        "data",
+        "bids_root",
+        "sub-subtest",
+        "ses-1",
+        "test",
+        "sub-test_ses-1_run-001_modlbl.json"
     )
 
     @test get_metadata_path(my_file) == metadata_path

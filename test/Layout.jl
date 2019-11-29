@@ -1,7 +1,8 @@
 @testset "parse single subject" begin
     bids_root = joinpath(
         @__DIR__,
-        "data/bids_root/"
+        "data",
+        "bids_root"
     )
 
     my_layout = Layout(bids_root)
@@ -26,7 +27,8 @@ end
     # session), so testing the others are not necessary
     bids_root = joinpath(
         @__DIR__,
-        "data/bids_root/"
+        "data",
+        "bids_root"
     )
 
     my_layout = Layout(bids_root)
@@ -35,7 +37,12 @@ end
     @test length(f) == 1
     @test f[1].path == joinpath(
         @__DIR__,
-        "data/bids_root/sub-subtest/ses-1/test/sub-test_ses-1_run-001_modlbl.nii.gz"
+        "data",
+        "bids_root",
+        "sub-subtest",
+        "ses-1",
+        "test",
+        "sub-test_ses-1_run-001_modlbl.nii.gz"
     )
 
     f = get_files(my_layout, key1="value1", run="002")

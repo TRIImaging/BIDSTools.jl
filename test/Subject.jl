@@ -1,7 +1,9 @@
 @testset "parse single subject" begin
     sub_path = joinpath(
         @__DIR__,
-        "data/bids_root/sub-subtest/"
+        "data",
+        "bids_root",
+        "sub-subtest"
     )
 
     my_sub = Subject(sub_path)
