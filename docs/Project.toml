@@ -1,0 +1,9 @@
+[deps]
+BIDSTools = "5c32dcf8-0cad-11ea-129f-5f4ce150df4b"
+CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+Example = "7876af07-990d-54b4-ab0e-23690620f79a"
+JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
+PrettyTables = "08abe8d2-0d0c-5749-adfa-8a2ac140af0d"
