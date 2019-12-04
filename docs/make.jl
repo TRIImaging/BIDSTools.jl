@@ -13,5 +13,12 @@ makedocs(
         "Module" => "module.md"
     ],
     format = Documenter.HTML(prettyurls = false),
+    clean = false,
     doctest = true
+)
+
+deploydocs(
+    repo = "github.com/TRIImaging/BIDSTools.jl.git",
+    target = "build",
+    push_preview = true
 )
