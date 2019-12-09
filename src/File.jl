@@ -277,6 +277,7 @@ function construct_fname(
         @assert !occursin(r"-|_", k)
         @assert !occursin(r"-|_", v)
         k == "modality" && continue
+        isnothing(v) && continue
         result_fname = result_fname == "" ? "$k-$v" :
                        join([result_fname, "$k-$v"], "_")
     end
