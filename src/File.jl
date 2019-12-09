@@ -217,3 +217,71 @@ function get_files(
     end
     return result
 end
+
+"""
+    function get_sub(path::AbstractString; from_fname::Bool=true)
+
+Function to get subject_id from path or File object. If `from_fname` is true, only
+looks the `subject_id` from filename, otherwise, looks into full path if subject_id
+can't be found in filename.
+
+Returns nothing if no subject ID found.
+"""
+get_sub(file::File; kws...) = get_sub(file.path; kws...)
+
+function get_sub(path::AbstractString; from_fname::Bool=true)
+    sub_rgx = r"\/sub-(.+?)\/"
+    sub_match = get(parse_fname(basename(path)), "sub", nothing)
+    if isnothing(sub_match) && !from_fname
+        sub_match = isnothing(match(sub_rgx, path)) ? nothing : match(sub_rgx, path)[1]
+    end
+    !isnothing(sub_match) && return sub_match
+    nothing
+end
+
+"""
+    function get_ses(path::AbstractString; from_fname::Bool=true)
+
+Function to get session_id from path or File object. If `from_fname` is true, only
+looks the `session_id` from filename, otherwise, looks into full path if session_id
+can't be found in filename.
+
+Returns nothing if no subject ID found.
+"""
+get_ses(file::File; kws...) = get_ses(file.path; kws...)
+
+function get_ses(path::AbstractString; from_fname::Bool=true)
+    ses_rgx = r"\/ses-(.+?)\/"
+    ses_match = get(parse_fname(basename(path)), "ses", nothing)
+    if isnothing(ses_match) && !from_fname
+        ses_match = isnothing(match(ses_rgx, path)) ? nothing : match(ses_rgx, path)[1]
+    end
+    !isnothing(ses_match) && return ses_match
+    nothing
+end
+
+"""
+    function construct_fname(
+        entities::AbstractDict{String,String}; ext::Union{String,Nothing}
+    )
+
+Function to construct BIDS filename from `entities`. It is recommended to use
+`OrderedDict` for this purpose to retain the order of the elements. To supply modality,
+e.g. `_T1w`, use `modality` key, i.e. "modality"=>"T1w".
+"""
+function construct_fname(
+    entities::AbstractDict{String,String}; ext::Union{String,Nothing}=nothing
+)
+    result_fname = ""
+    for (k,v) in entities
+        @assert !occursin(r"-|_", k)
+        @assert !occursin(r"-|_", v)
+        k == "modality" && continue
+        result_fname = result_fname == "" ? "$k-$v" :
+                       join([result_fname, "$k-$v"], "_")
+    end
+    result_fname = !haskey(entities, "modality") ? result_fname :
+                   join([result_fname, entities["modality"]], "_")
+    result_fname = isnothing(ext) ? result_fname : "$(result_fname).$ext"
+    result_fname
+end

@@ -36,6 +36,8 @@
     )
 
     @test get_metadata_path(my_file) == metadata_path
+    @test get_sub(my_file) == "test"
+    @test get_ses(my_file) == "1"
 end
 
 @testset "parse filename" begin
@@ -82,4 +84,6 @@ end
     for (fname_test, e) in fname_err
         @test_throws e parse_fname(fname_test)
     end
+
+    @test construct_fname(entities, ext="json") == fname
 end
