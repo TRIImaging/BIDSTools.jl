@@ -248,9 +248,7 @@ function get_sub(
     require_modality::Bool=true,
     strict::Bool=true
 )
-    sep = Base.Filesystem.path_separator
-    sub_rgx = Regex("$(sep)sub-(.+?)$(sep)")
-        Base.Filesystem.path_separator
+    sub_rgx =  r"[\\|/]sub-(.+?)[\\|/]"
     sub_match = get(
         parse_fname(basename(path), require_modality=require_modality, strict=strict),
         "sub",
@@ -293,8 +291,7 @@ function get_ses(
     require_modality::Bool=true,
     strict::Bool=true
 )
-    sep = Base.Filesystem.path_separator
-    ses_rgx = Regex("$(sep)ses-(.+?)$(sep)")
+    ses_rgx =  r"[\\|/]ses-(.+?)[\\|/]"
     ses_match = get(
         parse_fname(basename(path), require_modality=require_modality, strict=strict),
         "ses",
