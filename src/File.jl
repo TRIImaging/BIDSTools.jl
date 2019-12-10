@@ -219,19 +219,43 @@ function get_files(
 end
 
 """
-    function get_sub(path::AbstractString; from_fname::Bool=true)
+    function get_sub(
+        path;
+        from_fname::Bool=true,
+        require_modality::Bool=true,
+        strict::Bool=true
+    )
 
-Function to get subject_id from path or File object. If `from_fname` is true, only
-looks the `subject_id` from filename, otherwise, looks into full path if subject_id
-can't be found in filename.
+Function to get subject_id from path or File object.
+
+The following keyword arguments can be passed:
+
+* `from_fname`::Bool - detauls to true. If `true`, only looks the `subject_id` from
+  filename, otherwise, looks into full path if `subject_id` can't be found in filename
+* `require_modality::Bool` - defaults to `true`. If `true` this expects a modality
+  presents in every file name, e.g. sub-subtest_ses-1_run-001_**T1w**.nii.gz
+* `strict::Bool` - defaults to `true`. If `true`, `BIDSTools` will throw an error on
+  invalid BIDS filename, this can be turned to `false` to not parse those file names
+  and display a warning instead. This will result in empty dictionary in `entities`.
 
 Returns nothing if no subject ID found.
 """
 get_sub(file::File; kws...) = get_sub(file.path; kws...)
 
-function get_sub(path::AbstractString; from_fname::Bool=true)
-    sub_rgx = r"\/sub-(.+?)\/"
-    sub_match = get(parse_fname(basename(path)), "sub", nothing)
+function get_sub(
+    path::AbstractString;
+    from_fname::Bool=true,
+    require_modality::Bool=true,
+    strict::Bool=true
+)
+    sep = Base.Filesystem.path_separator
+    sub_rgx = Regex("$(sep)sub-(.+?)$(sep)")
+        Base.Filesystem.path_separator
+    sub_match = get(
+        parse_fname(basename(path), require_modality=require_modality, strict=strict),
+        "sub",
+        nothing
+    )
     if isnothing(sub_match) && !from_fname
         sub_match = isnothing(match(sub_rgx, path)) ? nothing : match(sub_rgx, path)[1]
     end
@@ -240,19 +264,42 @@ function get_sub(path::AbstractString; from_fname::Bool=true)
 end
 
 """
-    function get_ses(path::AbstractString; from_fname::Bool=true)
+    function get_ses(
+        path;
+        from_fname::Bool=true,
+        require_modality::Bool=true,
+        strict::Bool=true
+    )
 
-Function to get session_id from path or File object. If `from_fname` is true, only
-looks the `session_id` from filename, otherwise, looks into full path if session_id
-can't be found in filename.
+Function to get session_id from path or File object.
 
-Returns nothing if no subject ID found.
+The following keyword arguments can be passed:
+
+* `from_fname`::Bool - detauls to true. If `true`, only looks the `session_id` from
+  filename, otherwise, looks into full path if `session_id` can't be found in filename
+* `require_modality::Bool` - defaults to `true`. If `true` this expects a modality
+  presents in every file name, e.g. sub-subtest_ses-1_run-001_**T1w**.nii.gz
+* `strict::Bool` - defaults to `true`. If `true`, `BIDSTools` will throw an error on
+  invalid BIDS filename, this can be turned to `false` to not parse those file names
+  and display a warning instead. This will result in empty dictionary in `entities`.
+
+Returns nothing if no session ID found.
 """
 get_ses(file::File; kws...) = get_ses(file.path; kws...)
 
-function get_ses(path::AbstractString; from_fname::Bool=true)
-    ses_rgx = r"\/ses-(.+?)\/"
-    ses_match = get(parse_fname(basename(path)), "ses", nothing)
+function get_ses(
+    path::AbstractString;
+    from_fname::Bool=true,
+    require_modality::Bool=true,
+    strict::Bool=true
+)
+    sep = Base.Filesystem.path_separator
+    ses_rgx = Regex("$(sep)ses-(.+?)$(sep)")
+    ses_match = get(
+        parse_fname(basename(path), require_modality=require_modality, strict=strict),
+        "ses",
+        nothing
+    )
     if isnothing(ses_match) && !from_fname
         ses_match = isnothing(match(ses_rgx, path)) ? nothing : match(ses_rgx, path)[1]
     end
@@ -261,23 +308,19 @@ function get_ses(path::AbstractString; from_fname::Bool=true)
 end
 
 """
-    function construct_fname(
-        entities::AbstractDict{String,String}; ext::Union{String,Nothing}
-    )
+    function construct_fname(entities::AbstractDict; ext::Union{String,Nothing}=nothing)
 
 Function to construct BIDS filename from `entities`. It is recommended to use
 `OrderedDict` for this purpose to retain the order of the elements. To supply modality,
 e.g. `_T1w`, use `modality` key, i.e. "modality"=>"T1w".
 """
-function construct_fname(
-    entities::AbstractDict{String,String}; ext::Union{String,Nothing}=nothing
-)
+function construct_fname(entities::AbstractDict; ext::Union{String,Nothing}=nothing)
     result_fname = ""
     for (k,v) in entities
-        @assert !occursin(r"-|_", k)
-        @assert !occursin(r"-|_", v)
         k == "modality" && continue
         isnothing(v) && continue
+        @assert !occursin(r"-|_", k)
+        @assert !occursin(r"-|_", v)
         result_fname = result_fname == "" ? "$k-$v" :
                        join([result_fname, "$k-$v"], "_")
     end
