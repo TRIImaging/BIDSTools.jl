@@ -273,7 +273,7 @@ Function to get session_id from path or File object.
 
 The following keyword arguments can be passed:
 
-* `from_fname`::Bool - detauls to true. If `true`, only looks the `session_id` from
+* `from_fname`::Bool - defaults to true. If `true`, only looks the `session_id` from
   filename, otherwise, looks into full path if `session_id` can't be found in filename
 * `require_modality::Bool` - defaults to `true`. If `true` this expects a modality
   presents in every file name, e.g. sub-subtest_ses-1_run-001_**T1w**.nii.gz
