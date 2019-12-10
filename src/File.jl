@@ -15,6 +15,9 @@ tweaked accordingly with the optional parameters:
 * `strict::Bool` - defaults to `true`. If `true`, `BIDSTools` will throw an error on
   invalid BIDS filename, this can be turned to `false` to not parse those file names
   and display a warning instead. This will result in empty dictionary in `entities`.
+* `extract_from_full_path::Bool` - defaults to `true`. If `true`, will try to extract
+  `sub` and `ses` from full path and append to `entities` if they can't be found in the
+  parsed filename.
 
 # Example
 
@@ -37,14 +40,17 @@ function File(
     path::AbstractString;
     load_metadata::Bool=true,
     require_modality::Bool=true,
-    strict::Bool=true
+    strict::Bool=true,
+    extract_from_full_path::Bool=true
 )
     entities = parse_path(path, require_modality=require_modality, strict=strict)
     # Try extracting sub and ses from full path if not exists in parsed filename
-    entities["sub"] = haskey(entities, "sub") ? entities["sub"] :
-                      get_sub(path, from_fname=false)
-    entities["ses"] = haskey(entities, "ses") ? entities["ses"] :
-                      get_ses(path, from_fname=false)
+    if extract_from_full_path
+        entities["sub"] = haskey(entities, "sub") ? entities["sub"] :
+                          get_sub(path, from_fname=false)
+        entities["ses"] = haskey(entities, "ses") ? entities["ses"] :
+                          get_ses(path, from_fname=false)
+    end
     metadata = !load_metadata ? OrderedDict{String,Any}() :
                JSON.parsefile(
                    get_metadata_path(path), dicttype=OrderedDict{String,Any}
