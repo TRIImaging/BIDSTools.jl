@@ -38,8 +38,12 @@
     @test get_metadata_path(my_file) == metadata_path
     @test get_sub(my_file) == "test"
     @test get_ses(my_file) == "1"
-    @test get_sub(dirname(my_file.path), from_fname=false) == "subtest"
-    @test get_ses(dirname(my_file.path), from_fname=false) == "1"
+    @test get_sub(
+        dirname(my_file.path)*Base.Filesystem.path_separator, from_fname=false
+    ) == "subtest"
+    @test get_ses(
+        dirname(my_file.path)*Base.Filesystem.path_separator, from_fname=false
+    ) == "1"
 end
 
 @testset "parse filename" begin

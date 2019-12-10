@@ -40,6 +40,11 @@ function File(
     strict::Bool=true
 )
     entities = parse_path(path, require_modality=require_modality, strict=strict)
+    # Try extracting sub and ses from full path if not exists in parsed filename
+    entities["sub"] = haskey(entities, "sub") ? entities["sub"] :
+                      get_sub(path, from_fname=false)
+    entities["ses"] = haskey(entities, "ses") ? entities["ses"] :
+                      get_ses(path, from_fname=false)
     metadata = !load_metadata ? OrderedDict{String,Any}() :
                JSON.parsefile(
                    get_metadata_path(path), dicttype=OrderedDict{String,Any}
@@ -248,7 +253,7 @@ function get_sub(
     require_modality::Bool=true,
     strict::Bool=true
 )
-    sub_rgx =  r"[\\|/]sub-(.+?)[\\|/]"
+    sub_rgx =  r"[\\/]sub-(.+?)[\\/]"
     sub_match = get(
         parse_fname(basename(path), require_modality=require_modality, strict=strict),
         "sub",
@@ -291,7 +296,7 @@ function get_ses(
     require_modality::Bool=true,
     strict::Bool=true
 )
-    ses_rgx =  r"[\\|/]ses-(.+?)[\\|/]"
+    ses_rgx =  r"[\\/]ses-(.+?)[\\/]"
     ses_match = get(
         parse_fname(basename(path), require_modality=require_modality, strict=strict),
         "ses",
@@ -316,8 +321,10 @@ function construct_fname(entities::AbstractDict; ext::Union{String,Nothing}=noth
     for (k,v) in entities
         k == "modality" && continue
         isnothing(v) && continue
-        @assert !occursin(r"-|_", k)
-        @assert !occursin(r"-|_", v)
+        !occursin(r"[-_]", k) ||
+            throw(ArgumentError("Cannot have - or _ in bids key $k"))
+        !occursin(r"[-_]", v) ||
+            throw(ArgumentError("Cannot have - or _ in bids key $v"))
         result_fname = result_fname == "" ? "$k-$v" :
                        join([result_fname, "$k-$v"], "_")
     end
