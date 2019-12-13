@@ -46,20 +46,22 @@ function File(
     entities = parse_path(path, require_modality=require_modality, strict=strict)
     # Try extracting sub and ses from full path if not exists in parsed filename
     if extract_from_full_path
-        entities["sub"] = haskey(entities, "sub") ? entities["sub"] :
-                          get_sub(
-                            path,
-                            from_fname=false,
-                            require_modality=require_modality,
-                            strict=strict
-                          )
-        entities["ses"] = haskey(entities, "ses") ? entities["ses"] :
-                          get_ses(
-                            path,
-                            from_fname=false,
-                            require_modality=require_modality,
-                            strict=strict
-                          )
+        if !haskey(entities, "sub")
+            entities["sub"] = get_sub(
+                                path,
+                                from_fname=false,
+                                require_modality=require_modality,
+                                strict=strict
+                              )
+        end
+        if !haskey(entities, "ses")
+            entities["ses"] = get_ses(
+                                path,
+                                from_fname=false,
+                                require_modality=require_modality,
+                                strict=strict
+                              )
+        end
     end
     metadata = !load_metadata ? OrderedDict{String,Any}() :
                JSON.parsefile(
