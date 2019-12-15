@@ -22,6 +22,9 @@ tweaked accordingly with the optional parameters:
 * `strict::Bool` - defaults to `true`. If `true`, `BIDSTools` will throw errors on
   invalid BIDS filenames, this can be turned to `false` to not parse those file names
   and display a warning instead.
+* `extract_from_full_path::Bool` - defaults to `true`. If `true`, will try to extract
+  `sub` and `ses` from full path and append to `entities` if they can't be found in the
+  parsed filename.
 
 # Example
 
@@ -45,7 +48,8 @@ function Session(
     load_metadata::Bool=true,
     require_modality::Bool=true,
     longitudinal::Bool=true,
-    strict::Bool=true
+    strict::Bool=true,
+    extract_from_full_path::Bool=true
 )
     files = Vector{File}()
     scans_detail = nothing
@@ -79,7 +83,8 @@ function Session(
                             joinpath(path, d, f),
                             load_metadata=load_metadata,
                             require_modality=require_modality,
-                            strict=strict
+                            strict=strict,
+                            extract_from_full_path=extract_from_full_path
                         )
                     )
                 end

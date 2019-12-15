@@ -36,6 +36,23 @@
     )
 
     @test get_metadata_path(my_file) == metadata_path
+    @test get_sub(my_file) == "test"
+    @test get_ses(my_file) == "1"
+    @test get_sub(
+        dirname(my_file.path)*Base.Filesystem.path_separator, from_fname=false
+    ) == "subtest"
+    @test get_ses(
+        dirname(my_file.path)*Base.Filesystem.path_separator, from_fname=false
+    ) == "1"
+
+    new_path = joinpath(dirname(file_path), "run-001_modlbl.nii.gz")
+    mv(file_path, new_path)
+    my_file = File(new_path, load_metadata=false)
+    @test my_file.path == new_path
+    @test my_file.metadata == OrderedDict{String,Any}()
+    entities["sub"] = "subtest"
+    @test my_file.entities == entities
+    mv(new_path, file_path)
 end
 
 @testset "parse filename" begin
@@ -82,4 +99,6 @@ end
     for (fname_test, e) in fname_err
         @test_throws e parse_fname(fname_test)
     end
+
+    @test construct_fname(entities, ext="json") == fname
 end

@@ -15,6 +15,9 @@ tweaked accordingly with the optional parameters:
 * `strict::Bool` - defaults to `true`. If `true`, `BIDSTools` will throw an error on
   invalid BIDS filename, this can be turned to `false` to not parse those file names
   and display a warning instead. This will result in empty dictionary in `entities`.
+* `extract_from_full_path::Bool` - defaults to `true`. If `true`, will try to extract
+  `sub` and `ses` from full path and append to `entities` if they can't be found in the
+  parsed filename.
 
 # Example
 
@@ -37,9 +40,29 @@ function File(
     path::AbstractString;
     load_metadata::Bool=true,
     require_modality::Bool=true,
-    strict::Bool=true
+    strict::Bool=true,
+    extract_from_full_path::Bool=true
 )
     entities = parse_path(path, require_modality=require_modality, strict=strict)
+    # Try extracting sub and ses from full path if not exists in parsed filename
+    if extract_from_full_path
+        if !haskey(entities, "sub")
+            entities["sub"] = get_sub(
+                                path,
+                                from_fname=false,
+                                require_modality=require_modality,
+                                strict=strict
+                              )
+        end
+        if !haskey(entities, "ses")
+            entities["ses"] = get_ses(
+                                path,
+                                from_fname=false,
+                                require_modality=require_modality,
+                                strict=strict
+                              )
+        end
+    end
     metadata = !load_metadata ? OrderedDict{String,Any}() :
                JSON.parsefile(
                    get_metadata_path(path), dicttype=OrderedDict{String,Any}
@@ -216,4 +239,115 @@ function get_files(
         check_entities_meta(f; kws...)
     end
     return result
+end
+
+"""
+    function get_sub(
+        path;
+        from_fname::Bool=true,
+        require_modality::Bool=true,
+        strict::Bool=true
+    )
+
+Function to get subject_id from path or File object.
+
+The following keyword arguments can be passed:
+
+* `from_fname`::Bool - detauls to true. If `true`, only looks the `subject_id` from
+  filename, otherwise, looks into full path if `subject_id` can't be found in filename
+* `require_modality::Bool` - defaults to `true`. If `true` this expects a modality
+  presents in every file name, e.g. sub-subtest_ses-1_run-001_**T1w**.nii.gz
+* `strict::Bool` - defaults to `true`. If `true`, `BIDSTools` will throw an error on
+  invalid BIDS filename, this can be turned to `false` to not parse those file names
+  and display a warning instead. This will result in empty dictionary in `entities`.
+
+Returns nothing if no subject ID found.
+"""
+get_sub(file::File; kws...) = get_sub(file.path; kws...)
+
+function get_sub(
+    path::AbstractString;
+    from_fname::Bool=true,
+    require_modality::Bool=true,
+    strict::Bool=true
+)
+    sub_rgx =  r"[\\/]sub-(.+?)[\\/]"
+    sub_match = get(
+        parse_fname(basename(path), require_modality=require_modality, strict=strict),
+        "sub",
+        nothing
+    )
+    if isnothing(sub_match) && !from_fname
+        sub_match = isnothing(match(sub_rgx, path)) ? nothing : match(sub_rgx, path)[1]
+    end
+    !isnothing(sub_match) && return sub_match
+    nothing
+end
+
+"""
+    function get_ses(
+        path;
+        from_fname::Bool=true,
+        require_modality::Bool=true,
+        strict::Bool=true
+    )
+
+Function to get session_id from path or File object.
+
+The following keyword arguments can be passed:
+
+* `from_fname`::Bool - defaults to true. If `true`, only looks the `session_id` from
+  filename, otherwise, looks into full path if `session_id` can't be found in filename
+* `require_modality::Bool` - defaults to `true`. If `true` this expects a modality
+  presents in every file name, e.g. sub-subtest_ses-1_run-001_**T1w**.nii.gz
+* `strict::Bool` - defaults to `true`. If `true`, `BIDSTools` will throw an error on
+  invalid BIDS filename, this can be turned to `false` to not parse those file names
+  and display a warning instead. This will result in empty dictionary in `entities`.
+
+Returns nothing if no session ID found.
+"""
+get_ses(file::File; kws...) = get_ses(file.path; kws...)
+
+function get_ses(
+    path::AbstractString;
+    from_fname::Bool=true,
+    require_modality::Bool=true,
+    strict::Bool=true
+)
+    ses_rgx =  r"[\\/]ses-(.+?)[\\/]"
+    ses_match = get(
+        parse_fname(basename(path), require_modality=require_modality, strict=strict),
+        "ses",
+        nothing
+    )
+    if isnothing(ses_match) && !from_fname
+        ses_match = isnothing(match(ses_rgx, path)) ? nothing : match(ses_rgx, path)[1]
+    end
+    !isnothing(ses_match) && return ses_match
+    nothing
+end
+
+"""
+    function construct_fname(entities::AbstractDict; ext::Union{String,Nothing}=nothing)
+
+Function to construct BIDS filename from `entities`. It is recommended to use
+`OrderedDict` for this purpose to retain the order of the elements. To supply modality,
+e.g. `_T1w`, use `modality` key, i.e. "modality"=>"T1w".
+"""
+function construct_fname(entities::AbstractDict; ext::Union{String,Nothing}=nothing)
+    result_fname = ""
+    for (k,v) in entities
+        k == "modality" && continue
+        isnothing(v) && continue
+        !occursin(r"[-_]", k) ||
+            throw(ArgumentError("Cannot have - or _ in bids key $k"))
+        !occursin(r"[-_]", v) ||
+            throw(ArgumentError("Cannot have - or _ in bids key $v"))
+        result_fname = result_fname == "" ? "$k-$v" :
+                       join([result_fname, "$k-$v"], "_")
+    end
+    result_fname = !haskey(entities, "modality") ? result_fname :
+                   join([result_fname, entities["modality"]], "_")
+    result_fname = isnothing(ext) ? result_fname : "$(result_fname).$ext"
+    result_fname
 end

@@ -28,6 +28,9 @@ export
     print_dataset_description,
     list_subject_detail,
     list_scans_detail,
-    get_files
+    get_files,
+    get_sub,
+    get_ses,
+    construct_fname
 
 end # module
