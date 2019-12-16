@@ -38,7 +38,5 @@ julia> for sub in layout.subjects
 
 julia> files = get_files(layout, path="Subtest", run="002")
 1-element Array{File,1}:
- File:
-    path = /path/to/bids/root/sub-Subtest/ses-2/mrs/sub-Subtest_ses-2_acq-96inc_loc-pcg_spec-uns_run-002_mod-cosy_fid.tsv
-    metadata_exist = true
+File("/path/to/bids/root/sub-Subtest/ses-2/mrs/sub-Subtest_ses-2_acq-96inc_loc-pcg_spec-uns_run-002_mod-cosy_fid.tsv")
 ```
