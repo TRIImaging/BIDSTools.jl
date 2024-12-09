@@ -39,6 +39,8 @@ struct Subject
     sessions::Vector{Session}
 end
 
+sessions(subject::Subject) = subject.sessions
+
 function Subject(
     path::AbstractString;
     search::Bool=true,
@@ -91,16 +93,19 @@ function total_files(subject::Subject)
 end
 
 function Base.show(io::IO, subject::Subject)
-    print(io, """
-        Subject:
-            identifier = $(subject.identifier)
-            total session = $(total_sessions(subject))
-            total files = $(total_files(subject))""")
+    print(
+        io,
+        """
+  Subject:
+      identifier = $(subject.identifier)
+      total session = $(total_sessions(subject))
+      total files = $(total_files(subject))"""
+    )
 end
 
 # Docstring of get_files is in File.jl
 function get_files(
-    subject::Subject; path::Union{String, Regex, Nothing}=nothing, kws...
+    subject::Subject; path::Union{String,Regex,Nothing}=nothing, kws...
 )
     result = Vector{File}()
     for ses in subject.sessions

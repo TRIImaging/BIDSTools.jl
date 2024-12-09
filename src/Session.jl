@@ -67,7 +67,7 @@ function Session(
     for d in readdir(path)
         if isnothing(scans_detail)
             scans_detail = isfile(joinpath(path, d)) && endswith(d, "_scans.tsv") ?
-                              CSV.File(joinpath(path, d)) |> DataFrame! : nothing
+                           CSV.File(joinpath(path, d)) |> DataFrame! : nothing
         end
     end
     if search
@@ -76,7 +76,7 @@ function Session(
             !isdir(joinpath(path, d)) && continue
             for f in readdir(joinpath(path, d))
                 # Ignore json-sidecar since it'll go to the metadata
-                if isfile(joinpath(path, d, f)) && !endswith(f, ".json")
+                if isfile(joinpath(path, d, f)) && !endswith(f, ".json") && !endswith(f, "_events.tsv")
                     push!(
                         files,
                         File(
@@ -97,6 +97,7 @@ function Session(
     Session(path, identifier, files, scans_detail)
 end
 
+files(session::Session) = session.files
 #-------------------------------------------------------------------------------
 
 """
@@ -110,10 +111,13 @@ function total_files(session::Session)
 end
 
 function Base.show(io::IO, session::Session)
-    print(io, """
-        Session:
-            identifier = $(session.identifier)
-            total files = $(total_files(session))""")
+    print(
+        io,
+        """
+  Session:
+      identifier = $(session.identifier)
+      total files = $(total_files(session))"""
+    )
 end
 
 """
@@ -122,12 +126,12 @@ end
 Function to pretty print scans detail spreadsheet (_scans.tsv) using PrettyTables
 """
 function list_scans_detail(session::Session)
-    pretty_table(session.scans_detail, crop= :none)
+    pretty_table(session.scans_detail, crop=:none)
 end
 
 # Docstring of get_files is in File.jl
 function get_files(
-    session::Session; path::Union{String, Regex, Nothing}=nothing, kws...
+    session::Session; path::Union{String,Regex,Nothing}=nothing, kws...
 )
     result = get_files(session.files; path=path, kws...)
     return result

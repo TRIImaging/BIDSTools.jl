@@ -11,7 +11,7 @@ For more info on BIDS, read [the documentation](https://bids-specification.readt
 
 ## Features
 
-* Working with BIDS Directory easily 
+* Working with BIDS Directory easily
 * Flexible usage - initialize single object as you wish
 * Query to get the desired files
 * Other utility functions such as `total_sessions`, `parse_fname`, `parse_path`, etc.

@@ -4,6 +4,7 @@
 * `path` - path to the file
 * `metadata` - dictionary parsed from JSON-sidecar
 * `entities` - dictionary parsed from key-value filename
+* `events` - DataFrame parsed from an `_events.tsv` file
 
 The `File` can be initialized by specifying only `path`. Other behavior can also be
 tweaked accordingly with the optional parameters:
@@ -31,9 +32,10 @@ File:
 struct File
     path::String
     # This is the metadata from JSON-sidecar (doesn't exists in BIDS-like directory)
-    metadata::OrderedDict{String, Any}
+    metadata::OrderedDict{String,Any}
     # Entities are the key-value from filename
-    entities::OrderedDict{String, String}
+    entities::OrderedDict{String,String}
+    events::DataFrame
 end
 
 function File(
@@ -41,34 +43,41 @@ function File(
     load_metadata::Bool=true,
     require_modality::Bool=true,
     strict::Bool=true,
-    extract_from_full_path::Bool=true
+    extract_from_full_path::Bool=true,
+    load_events::Bool=true
 )
     entities = parse_path(path, require_modality=require_modality, strict=strict)
     # Try extracting sub and ses from full path if not exists in parsed filename
     if extract_from_full_path
         if !haskey(entities, "sub")
             entities["sub"] = get_sub(
-                                path,
-                                from_fname=false,
-                                require_modality=require_modality,
-                                strict=strict
-                              )
+                path,
+                from_fname=false,
+                require_modality=require_modality,
+                strict=strict
+            )
         end
         if !haskey(entities, "ses")
             entities["ses"] = get_ses(
-                                path,
-                                from_fname=false,
-                                require_modality=require_modality,
-                                strict=strict
-                              )
+                path,
+                from_fname=false,
+                require_modality=require_modality,
+                strict=strict
+            )
         end
     end
     metadata = !load_metadata ? OrderedDict{String,Any}() :
                JSON.parsefile(
-                   get_metadata_path(path), dicttype=OrderedDict{String,Any}
-               )
-    File(path, metadata, entities)
+        get_metadata_path(path), dicttype=OrderedDict{String,Any}
+    )
+    events = !load_events ? DataFrame() : CSV.read(
+        get_events_path(path),
+        DataFrame;
+        delim='\t'
+    )
+    File(path, metadata, entities, events)
 end
+
 
 #-------------------------------------------------------------------------------
 
@@ -94,9 +103,27 @@ function get_metadata_path(path::AbstractString)
     fname_without_ext = split(basename(path), ".")[1]
     this_dirname = dirname(path)
 
-    metadata_path = isfile(joinpath(this_dirname, fname_without_ext*".json")) ?
-                    joinpath(this_dirname, fname_without_ext*".json") : nothing
+    metadata_path = isfile(joinpath(this_dirname, fname_without_ext * ".json")) ?
+                    joinpath(this_dirname, fname_without_ext * ".json") : nothing
     return metadata_path
+end
+
+"""
+    function get_events_path(path)
+
+Get file path of events file for a BIDS `path` which can be a string or `File`.
+"""
+function get_events_path(file::File)
+    get_events_path(file.path)
+end
+function get_events_path(path::AbstractString)
+    fname_without_ext = split(basename(path), ".")[1]
+    fname_without_ext = join(split(fname_without_ext, "_")[1:end-1], "_")
+    this_dirname = dirname(path)
+
+    events_path = isfile(joinpath(this_dirname, fname_without_ext * "_events.tsv")) ?
+                  joinpath(this_dirname, fname_without_ext * "_events.tsv") : nothing
+    return events_path
 end
 
 """
@@ -162,17 +189,17 @@ function parse_fname(
                 error(msg)
             else
                 @warn msg
-                return OrderedDict{String, String}()
+                return OrderedDict{String,String}()
             end
         end
-        k,v = part
+        k, v = part
         if haskey(d, k)
             msg = "Invalid BIDS file name (key $k occurs twice)"
             if strict
                 error(msg)
             else
                 @warn msg
-                return OrderedDict{String, String}()
+                return OrderedDict{String,String}()
             end
         elseif isempty(k)
             msg = "Empty key in pair $k-$v"
@@ -180,7 +207,7 @@ function parse_fname(
                 error(msg)
             else
                 @warn msg
-                return OrderedDict{String, String}()
+                return OrderedDict{String,String}()
             end
         end
         d[k] = v
@@ -195,7 +222,7 @@ Private function to check whether keywords argument in metadata or in entities. 
 false if the key could not be found anywhere or the value of given key is not the same.
 """
 function check_entities_meta(file::File; kws...)
-    for (k,v) in kws
+    for (k, v) in kws
         keystr = string(k)
         meta_val = get(file.entities, keystr) do
             get(file.metadata, keystr, nothing)
@@ -230,10 +257,10 @@ filtered_files = get_files(layout, run="002", modality="T1w")
 ```
 """
 function get_files(
-    files::Vector{File}; path::Union{String, Regex, Nothing}=nothing, kws...
+    files::Vector{File}; path::Union{String,Regex,Nothing}=nothing, kws...
 )
     if !isnothing(path)
-        filter!(x->occursin(path, x.path), files)
+        filter!(x -> occursin(path, x.path), files)
     end
     result = filter(files) do f
         check_entities_meta(f; kws...)
@@ -271,7 +298,7 @@ function get_sub(
     require_modality::Bool=true,
     strict::Bool=true
 )
-    sub_rgx =  r"[\\/]sub-(.+?)[\\/]"
+    sub_rgx = r"[\\/]sub-(.+?)[\\/]"
     sub_match = get(
         parse_fname(basename(path), require_modality=require_modality, strict=strict),
         "sub",
@@ -314,7 +341,7 @@ function get_ses(
     require_modality::Bool=true,
     strict::Bool=true
 )
-    ses_rgx =  r"[\\/]ses-(.+?)[\\/]"
+    ses_rgx = r"[\\/]ses-(.+?)[\\/]"
     ses_match = get(
         parse_fname(basename(path), require_modality=require_modality, strict=strict),
         "ses",
@@ -336,7 +363,7 @@ e.g. `_T1w`, use `modality` key, i.e. "modality"=>"T1w".
 """
 function construct_fname(entities::AbstractDict; ext::Union{String,Nothing}=nothing)
     result_fname = ""
-    for (k,v) in entities
+    for (k, v) in entities
         k == "modality" && continue
         isnothing(v) && continue
         !occursin(r"[-_]", k) ||

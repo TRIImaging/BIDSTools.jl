@@ -16,13 +16,13 @@ export
     Subject,
     Session,
     File
-
 # Utility functions
 export
     total_subjects,
     total_sessions,
     total_files,
     get_metadata_path,
+    get_events_path,
     parse_path,
     parse_fname,
     print_dataset_description,
@@ -31,6 +31,9 @@ export
     get_files,
     get_sub,
     get_ses,
-    construct_fname
+    construct_fname,
+    subjects,
+    sessions,
+    files
 
 end # module

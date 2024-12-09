@@ -45,9 +45,11 @@ struct Layout
     subjects::Vector{Subject}
     # With this turned off, not going to look for ses- in path
     longitudinal::Bool
-    description::OrderedDict{String, Any}
+    description::OrderedDict{String,Any}
     subjects_detail::DataFrame
 end
+
+subjects(layout::Layout) = layout.subjects
 
 function Layout(
     root::AbstractString;
@@ -79,15 +81,15 @@ function Layout(
         end
     end
     description = !isfile(joinpath(root, "dataset_description.json")) ?
-                      OrderedDict{String,Any}() :
-                      JSON.parsefile(
-                          joinpath(root, "dataset_description.json"),
-                          dicttype=OrderedDict{String,Any}
-                      )
+                  OrderedDict{String,Any}() :
+                  JSON.parsefile(
+        joinpath(root, "dataset_description.json"),
+        dicttype=OrderedDict{String,Any}
+    )
     subjects_detail = !isfile(joinpath(root, "subjects.tsv")) ?
-                              DataFrame() :
-                              CSV.File(joinpath(root, "subjects.tsv"), delim="\t")|>
-                                  DataFrame!
+                      DataFrame() :
+                      CSV.File(joinpath(root, "subjects.tsv"), delim="\t") |>
+                      DataFrame!
     Layout(root, subjects, longitudinal, description, subjects_detail)
 end
 
@@ -118,12 +120,15 @@ end
 
 
 function Base.show(io::IO, layout::Layout)
-    print(io, """
-        Layout:
-            root = $(layout.root)
-            total subject = $(total_subjects(layout))
-            total session = $(total_sessions(layout))
-            total files = $(total_files(layout))""")
+    print(
+        io,
+        """
+  Layout:
+      root = $(layout.root)
+      total subject = $(total_subjects(layout))
+      total session = $(total_sessions(layout))
+      total files = $(total_files(layout))"""
+    )
 end
 
 """
@@ -141,12 +146,12 @@ end
 Function to pretty print subject spreadsheet (subjects.tsv) using PrettyTables
 """
 function list_subject_detail(layout::Layout)
-    pretty_table(layout.subjects_detail, crop= :none)
+    pretty_table(layout.subjects_detail, crop=:none)
 end
 
 # Docstring of get_files is in File.jl
 function get_files(
-    layout::Layout; path::Union{String, Regex, Nothing}=nothing, kws...
+    layout::Layout; path::Union{String,Regex,Nothing}=nothing, kws...
 )
     result = Vector{File}()
     for sub in layout.subjects
