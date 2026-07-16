@@ -13,11 +13,11 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
 julia = "1.2"
-CSV = "0.5.18"
-DataFrames = "0.19,0.20"
-DataStructures = "0.17.5"
+CSV = "0.5.18, 0.10"
+DataFrames = "0.19, 0.20, 1"
+DataStructures = "0.17, 0.18, 0.19"
 JSON = "0.21"
-PrettyTables = "0.6,0.7,0.8"
+PrettyTables = "0.6, 0.7, 0.8, 2"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
