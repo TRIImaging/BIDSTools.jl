@@ -19,12 +19,16 @@ jobs:
       fail-fast: false
       matrix:
         julia-version: ['1.10', 'nightly']
-        os: [ubuntu-latest, macos-latest, windows-latest]
+    include:
+      - os: ubuntu-latest
+        version: 'nightly'
+        arch: x64
+      - os: windows-latest
+        version: '1'
         arch: [x64, x86]
-        exclude:
-          # GitHub Actions runners are 64-bit only on macOS
-          - os: macos-latest
-            arch: x86
+      - os: macos-latest
+        version: '1'
+        arch: aarch64
     steps:
       - uses: actions/checkout@v7
       - uses: julia-actions/setup-julia@v3
