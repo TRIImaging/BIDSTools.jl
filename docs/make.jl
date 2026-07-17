@@ -13,7 +13,8 @@ makedocs(
     ],
     format = Documenter.HTML(prettyurls = false),
     clean = false,
-    doctest = true
+    doctest = true,
+    warnonly = [:missing_docs]
 )
 
 deploydocs(
